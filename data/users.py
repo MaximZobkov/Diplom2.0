@@ -1,28 +1,20 @@
-import sqlalchemy
 from flask_login import UserMixin
-from pandas.conftest import nullable_string_dtype
-from sqlalchemy_serializer import SerializerMixin
 from werkzeug.security import generate_password_hash, check_password_hash
+from flask_sqlalchemy import SQLAlchemy
 
-from .db_session import SqlAlchemyBase
+db = SQLAlchemy()
 
-
-class User(SqlAlchemyBase, UserMixin, SerializerMixin):
+class User(UserMixin, db.Model):
     __tablename__ = 'users'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    username = db.Column(db.String(40), unique=True, nullable=False)
+    email = db.Column(db.String(60), unique=True, nullable=False)
+    password_hash = db.Column(db.String(128), nullable=False)
 
-    id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True, autoincrement=True)
-    name = sqlalchemy.Column(sqlalchemy.String, nullable=False)
-    surname = sqlalchemy.Column(sqlalchemy.String, nullable=False)
-    email = sqlalchemy.Column(sqlalchemy.String, index=True, unique=True, nullable=True)
-    password = sqlalchemy.Column(sqlalchemy.String, nullable=True)
-    number = sqlalchemy.Column(sqlalchemy.Numeric, nullable=False)
-    email_address = sqlalchemy.Column(sqlalchemy.VARCHAR, nullable=False)
-
-    def __repr__(self):
-        return f'{self.id}, {self.name}, {self.email}'
-
-    def set_password(self, password):
-        self.password = generate_password_hash(password)
+    def __init__(self, username, email, password):
+        self.username = username
+        self.email = email
+        self.password_hash = generate_password_hash(password)
 
     def check_password(self, password):
-        return check_password_hash(self.password, password)
+        return check_password_hash(self.password_hash, password)
