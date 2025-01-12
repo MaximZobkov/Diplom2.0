@@ -3,39 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="../static/css/style.css">
-    <title>Вход</title>
+    <title>Запись на услугу</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
 <header>
     <nav>
         <div class="logo"><a href="{{ url_for('index') }}">Центр Детейлинга</a></div>
         <ul>
+            <li><a href="{{ url_for('services') }}">Услуги</a></li>
+            {% if current_user.is_authenticated %}
+            <li><a href="{{ url_for('logout') }}">Выйти</a></li>
+            {% else %}
+            <li><a href="{{ url_for('login') }}">Войти</a></li>
             <li><a href="{{ url_for('register') }}">Зарегистрироваться</a></li>
+            {% endif %}
         </ul>
     </nav>
 </header>
 <main>
     <section class="form-section">
-        <h2>Вход</h2>
-        <form method="POST">
+        <h2>Запись на услугу</h2>
+        <form method="POST" action="{{ url_for('book') }}">
             {{ form.hidden_tag() }}
             <div class="form-group">
-                {{ form.username.label }}<br>
-                {{ form.username(size=32) }}<br>
-                {% for error in form.username.errors %}
-                <span class="error">[{{ error }}]</span>
-                {% endfor %}
+                {{ form.service.label }}
+                {{ form.service(class="form-control") }}
             </div>
             <div class="form-group">
-                {{ form.password.label }}<br>
-                {{ form.password(size=32) }}<br>
-                {% for error in form.password.errors %}
-                <span class="error">[{{ error }}]</span>
-                {% endfor %}
+                {{ form.booking_date.label }}
+                {{ form.booking_date(class="form-control") }}
             </div>
             <div class="form-group">
-                {{ form.submit(class="btn") }}
+                {{ form.submit(class="btn btn-primary") }}
             </div>
         </form>
     </section>

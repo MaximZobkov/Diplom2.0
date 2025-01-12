@@ -1,11 +1,13 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
-from flask_sqlalchemy import SQLAlchemy
-from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SubmitField
-from wtforms.validators import DataRequired, Email, EqualTo
-from werkzeug.security import generate_password_hash, check_password_hash
-from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
-from data.users import User, db
+from flask import Flask, render_template, redirect, url_for, flash
+from flask_login import LoginManager, login_user, login_required, logout_user, current_user
+
+from data.booking import Booking
+from data.services import Service
+from data.users import User
+from diplom.database import db
+from static.forms.booking import BookingForm
+from static.forms.loginform import LoginForm
+from static.forms.registerform import RegistrationForm
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your_secret_key'
@@ -17,19 +19,7 @@ login_manager.init_app(app)
 
 @login_manager.user_loader
 def load_user(user_id):
-    return User.query.get(int(user_id))
-
-class RegistrationForm(FlaskForm):
-    username = StringField('Username', validators=[DataRequired()])
-    email = StringField('Email', validators=[DataRequired(), Email()])
-    password = PasswordField('Password', validators=[DataRequired()])
-    confirm_password = PasswordField('Confirm Password', validators=[DataRequired(), EqualTo('password')])
-    submit = SubmitField('Register')
-
-class LoginForm(FlaskForm):
-    username = StringField('Username', validators=[DataRequired()])
-    password = PasswordField('Password', validators=[DataRequired()])
-    submit = SubmitField('Login')
+    return db.session.get(User, int(user_id))
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -39,13 +29,13 @@ def register():
         email = form.email.data
         password = form.password.data
 
-        # Проверка на существование пользователя с таким же именем пользователя
         existing_user = User.query.filter_by(username=username).first()
         if existing_user:
             flash('Username already exists. Please choose a different one.', 'danger')
             return render_template('register.html', form=form, err="Username already exists. Please choose a different one.")
 
-        user = User(username=username, email=email, password=password)
+        user = User(username=username, email=email)
+        user.set_password(password)
         db.session.add(user)
         db.session.commit()
         flash('Registration successful! Please log in.', 'success')
@@ -75,6 +65,28 @@ def logout():
 @app.route('/', methods=['GET'])
 def index():
     return render_template('index.html')
+
+
+@app.route('/services', methods=['GET'])
+def services():
+    services = Service.query.all()
+    return render_template('services.html', services=services)
+
+
+@app.route('/book', methods=['GET', 'POST'])
+@login_required
+def book():
+    form = BookingForm()
+    form.service.choices = [(service.id, service.name) for service in Service.query.all()]
+    if form.validate_on_submit():
+        service_id = form.service.data
+        booking_date = form.booking_date.data
+        booking = Booking(user_id=current_user.id, service_id=service_id, booking_date=booking_date)
+        db.session.add(booking)
+        db.session.commit()
+        flash('Booking successful!', 'success')
+        return redirect(url_for('index'))
+    return render_template('book.html', form=form)
 
 if __name__ == "__main__":
     with app.app_context():
