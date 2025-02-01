@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block title %}{{ service.name }}{% endblock %}
+
+{% block content %}
+<section class="service-detail" data-aos="fade-up">
+    <div class="container">
+        <h2>{{ service.name }}</h2>
+        <img src="{{ url_for('static', filename='img/' + service.image) }}" alt="{{ service.name }}">
+        <p>{{ service.description }}</p>
+    </div>
+</section>
+{% endblock %}

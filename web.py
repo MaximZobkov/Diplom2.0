@@ -4,8 +4,8 @@ from flask_login import LoginManager, login_user, login_required, logout_user, c
 from data.booking import Booking
 from data.services import Service
 from data.users import User
-from diplom.database import db
-from static.forms.booking import BookingForm
+from database import db
+from static.forms.bookingform import BookingForm
 from static.forms.loginform import LoginForm
 from static.forms.registerform import RegistrationForm
 
@@ -21,26 +21,53 @@ login_manager.init_app(app)
 def load_user(user_id):
     return db.session.get(User, int(user_id))
 
+
+@app.route('/', methods=['GET'])
+def index():
+    services = Service.query.all()
+    return render_template('index.html', services=services)
+
+
+@app.route('/service/<int:service_id>', methods=['GET'])
+def service_detail(service_id):
+    service = Service.query.get_or_404(service_id)
+    return render_template('service.html', service=service)
+
+
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     form = RegistrationForm()
     if form.validate_on_submit():
         username = form.username.data
         email = form.email.data
+        first_name = form.first_name.data
+        last_name = form.last_name.data
+        date_of_birth = form.date_of_birth.data
+        gender = form.gender.data
         password = form.password.data
 
         existing_user = User.query.filter_by(username=username).first()
-        if existing_user:
-            flash('Username already exists. Please choose a different one.', 'danger')
-            return render_template('register.html', form=form, err="Username already exists. Please choose a different one.")
+        existing_email = User.query.filter_by(email=email).first()
 
-        user = User(username=username, email=email)
+        if existing_user:
+            flash('Имя пользователя уже существует. Пожалуйста, выберите другое.', 'danger')
+            return render_template('register.html', form=form,
+                                   username_err="Имя пользователя уже существует. Пожалуйста, выберите другое.")
+
+        if existing_email:
+            flash('Email уже существует. Пожалуйста, выберите другой.', 'danger')
+            return render_template('register.html', form=form,
+                                   email_err="Email уже существует. Пожалуйста, выберите другой.")
+
+        user = User(username=username, email=email, first_name=first_name, last_name=last_name,
+                    date_of_birth=date_of_birth, gender=gender)
         user.set_password(password)
         db.session.add(user)
         db.session.commit()
-        flash('Registration successful! Please log in.', 'success')
+        flash('Регистрация успешна! Пожалуйста, войдите.', 'success')
         return redirect(url_for('login'))
-    return render_template('register.html', form=form, err="OK")
+    return render_template('register.html', form=form, username_err="OK", email_err="OK")
+
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -53,25 +80,15 @@ def login():
             login_user(user)
             return redirect(url_for('index'))
         else:
-            flash('Login Unsuccessful. Please check username and password', 'danger')
+            flash('Неверное имя пользователя или пароль', 'danger')
     return render_template('login.html', form=form)
+
 
 @app.route('/logout')
 @login_required
 def logout():
     logout_user()
     return redirect(url_for('index'))
-
-@app.route('/', methods=['GET'])
-def index():
-    return render_template('index.html')
-
-
-@app.route('/services', methods=['GET'])
-def services():
-    services = Service.query.all()
-    return render_template('services.html', services=services)
-
 
 @app.route('/book', methods=['GET', 'POST'])
 @login_required
@@ -84,7 +101,7 @@ def book():
         booking = Booking(user_id=current_user.id, service_id=service_id, booking_date=booking_date)
         db.session.add(booking)
         db.session.commit()
-        flash('Booking successful!', 'success')
+        flash('Бронирование успешно!', 'success')
         return redirect(url_for('index'))
     return render_template('book.html', form=form)
 

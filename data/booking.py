@@ -1,4 +1,4 @@
-from diplom.database import db
+from database import db
 
 
 class Booking(db.Model):

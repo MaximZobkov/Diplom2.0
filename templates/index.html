@@ -1,68 +1,23 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Центр Детейлинга</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <link rel="stylesheet" href="https://unpkg.com/aos@2.3.1/dist/aos.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Monotype+Corsiva&display=swap" rel="stylesheet">
-</head>
-<body>
-<header>
-    <nav>
-        <div class="logo"><a href="{{ url_for('index') }}">Центр Детейлинга</a></div>
-        <ul>
-            <li><a href="{{ url_for('services') }}">Услуги</a></li>
-            {% if current_user.is_authenticated %}
-            <li><a href="{{ url_for('logout') }}">Выйти</a></li>
-            {% else %}
-            <li><a href="{{ url_for('login') }}">Войти</a></li>
-            <li><a href="{{ url_for('register') }}">Зарегистрироваться</a></li>
-            {% endif %}
-        </ul>
-        <button id="theme-toggle">Переключить тему</button>
-    </nav>
-</header>
-<main>
-    <section class="hero" data-aos="fade-up">
-        <h1>Добро пожаловать в наш Центр Детейлинга</h1>
-        <p>Мы предлагаем широкий спектр услуг по детейлингу, чтобы ваш автомобиль всегда выглядел наилучшим образом.</p>
-        <div class="cta-buttons">
-            <a href="{{ url_for('services') }}" class="btn">Просмотреть услуги</a>
-            {% if current_user.is_authenticated %}
-            <a href="{{ url_for('book') }}" class="btn">Записаться на услугу</a>
-            {% else %}
-            <a href="{{ url_for('login') }}" class="btn">Войти для записи</a>
-            {% endif %}
-        </div>
-    </section>
+{% extends "base.html" %}
+
+{% block title %}Главная{% endblock %}
+
+{% block content %}
     <section id="services" class="services" data-aos="fade-up">
         <div class="container">
             <h2>Наши Услуги</h2>
             <div class="service-cards">
-                <div class="service-card" data-aos="zoom-in">
-                    <img src="{{ url_for('static', filename='img/мойка.jpg') }}" alt="Базовая мойка">
-                    <h3>Базовая мойка</h3>
-                    <p>Основная услуга по мойке автомобиля, включающая внешнюю и внутреннюю чистку.</p>
-                </div>
-                <div class="service-card" data-aos="zoom-in">
-                    <img src="{{ url_for('static', filename='img/детейлинг.jpg') }}" alt="Полный детейлинг">
-                    <h3>Полный детейлинг</h3>
-                    <p>Комплексная услуга, включающая глубокую чистку, полировку и защиту кузова.</p>
-                </div>
-                <div class="service-card" data-aos="zoom-in">
-                    <img src="{{ url_for('static', filename='img/полировка.jpg') }}" alt="Полировка">
-                    <h3>Полировка</h3>
-                    <p>Услуга по полировке кузова автомобиля для удаления царапин и восстановления блеска.</p>
-                </div>
-                <div class="service-card" data-aos="zoom-in">
-                    <img src="{{ url_for('static', filename='img/защита.jpg') }}" alt="Защита кузова">
-                    <h3>Защита кузова</h3>
-                    <p>Нанесение защитных покрытий для предотвращения повреждений и сохранения внешнего вида автомобиля.</p>
-                </div>
+                {% for service in services %}
+                    <div class="service-card" data-aos="zoom-in">
+                        <a class="service-details" href="{{ url_for('service_detail', service_id=service.id) }}">
+                            <img src="{{ url_for('static', filename='img/' + service.image) }}"
+                                 alt="{{ service.name }}">
+                            <h3>{{ service.name }}</h3>
+                            <p>{{ service.description }}</p>
+                        </a>
+                    </div>
+
+                {% endfor %}
             </div>
         </div>
     </section>
@@ -72,17 +27,4 @@
         <p>Телефон: +7 (123) 456-78-90</p>
         <p>Email: info@detailingcenter.ru</p>
     </section>
-</main>
-<footer>
-    <p>&copy; 2023 Центр Детейлинга. Все права защищены.</p>
-</footer>
-<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
-<script>
-    AOS.init();
-
-    document.getElementById('theme-toggle').addEventListener('click', function() {
-        document.body.classList.toggle('dark-theme');
-    });
-</script>
-</body>
-</html>
+{% endblock %}
